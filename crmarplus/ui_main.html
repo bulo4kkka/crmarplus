@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Главный экран CRM AR+</title>
+
+<!-- Красивый шрифт из Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* Общие стили */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+    overflow: hidden;
+}
+
+/* Фоновое изображение */
+.bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: url('assets/background.jpg') no-repeat center center/cover;
+    filter: blur(8px);
+    z-index: -1;
+}
+
+/* Полупрозрачная маска */
+.overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.35);
+    z-index: -1;
+}
+
+/* Центр контента */
+.center {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    animation: fadeInContent 1s ease-out;
+}
+
+/* Анимация появления контента */
+@keyframes fadeInContent {
+    from {opacity: 0; transform: translateY(-30px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+/* Большая надпись CRM AR+ */
+h1#title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 80px;
+    margin: 0;
+    letter-spacing: 3px;
+    text-shadow: 4px 4px 20px rgba(0,0,0,0.8);
+    animation: slideDown 1s ease-out;
+}
+
+/* Подзаголовок Приветствуем! */
+h2#welcome {
+    font-size: 38px;
+    margin: 20px 0 50px 0;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 12px rgba(0,0,0,0.7);
+    animation: slideUp 1s ease-out;
+}
+
+/* Анимации появления заголовка и подзаголовка */
+@keyframes slideDown {
+    from {opacity:0; transform: translateY(-50px);}
+    to {opacity:1; transform: translateY(0);}
+}
+
+@keyframes slideUp {
+    from {opacity:0; transform: translateY(50px);}
+    to {opacity:1; transform: translateY(0);}
+}
+
+/* Кнопка вход */
+button#enter-btn {
+    background-color: rgba(255,255,255,0.25);
+    color: white;
+    border: 2px solid white;
+    padding: 25px 70px;
+    font-size: 30px;
+    font-weight: 500;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(5px);
+}
+
+button#enter-btn:hover {
+    background-color: rgba(255,255,255,0.45);
+    transform: scale(1.12);
+}
+
+/* Плитки меню */
+.menu {
+    display: none;
+    margin-top: 50px;
+    grid-template-columns: repeat(2, 200px);
+    gap: 30px;
+    justify-content: center;
+}
+
+.tile {
+    background-color: rgba(255,255,255,0.2);
+    color: white;
+    padding: 50px 20px;
+    border-radius: 25px;
+    font-size: 26px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 25px rgba(0,0,0,0.5);
+    font-family: 'Montserrat', sans-serif;
+}
+
+.tile:hover {
+    background-color: rgba(255,255,255,0.45);
+    transform: translateY(-8px) scale(1.08);
+}
+
+/* Анимация появления плиток */
+
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="overlay"></div>
+
+<div class="center">
+    <h1 id="title">CRM AR+</h1>
+    <h2 id="welcome">Приветствуем!</h2>
+    <button id="enter-btn">Вход</button>
+
+    <div class="menu" id="menu">
+        <div class="tile" onclick="openClients()">Клиенты</div>
+        <div class="tile" onclick="openMissing()">Отчёты</div>
+        <div class="tile" onclick="alert('Задачи')">Задачи</div>
+        <div class="tile" onclick="alert('Настройки')">Настройки</div>
+    </div>
+</div>
+
+<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+<script>
+let pywebchannel = null;
+
+new QWebChannel(qt.webChannelTransport, function(channel) {
+    pywebchannel = channel.objects.pywebchannel;
+});
+
+function openClients() {
+    if (pywebchannel) {
+        pywebchannel.open_page("clients");
+    }
+}
+function openMissing() {
+    if (pywebchannel) {
+        pywebchannel.open_page("missing");
+    }
+}
+// Кнопка Вход
+
+const enterBtn = document.getElementById('enter-btn');
+const menu = document.getElementById('menu');
+
+enterBtn.addEventListener('click', () => {
+    // скрываем кнопку
+    enterBtn.style.display = 'none';
+
+    // показываем меню с анимацией
+    menu.style.display = 'grid';
+    const tiles = document.querySelectorAll('.tile');
+    tiles.forEach((tile, i) => {
+        setTimeout(() => {
+            tile.classList.add('show');
+        }, i * 150);
+    });
+});
+</script>
+
+</body>
+</html>

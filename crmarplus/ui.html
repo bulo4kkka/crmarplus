@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Клиенты — CRM AR+</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ===== Общие ===== */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+    color: white;
+    overflow: hidden;
+}
+
+/* Фон */
+.bg {
+    position: fixed;
+    inset: 0;
+    background: url('assets/background.jpg') no-repeat center / cover;
+    filter: blur(8px);
+    z-index: -2;
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: -1;
+}
+
+/* ===== Header ===== */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+header h1 {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1px;
+}
+
+.nav-buttons button {
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 8px 16px;
+    margin-left: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.nav-buttons button:hover {
+    background: rgba(255,255,255,0.45);
+}
+
+/* ===== Контейнер ===== */
+.container {
+    padding: 30px 40px;
+    animation: fadeIn 0.8s ease;
+}
+
+/* ===== Форма ===== */
+.form-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+input {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    min-width: 180px;
+}
+
+input::placeholder {
+    color: #ddd;
+}
+
+input:focus {
+    outline: none;
+    background: rgba(255,255,255,0.3);
+}
+
+button.add-btn {
+    background: rgba(255,255,255,0.3);
+    border: 2px solid white;
+    color: white;
+    font-size: 16px;
+    padding: 12px 25px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button.add-btn:hover {
+    background: rgba(255,255,255,0.5);
+    transform: scale(1.05);
+}
+
+/* ===== Таблица ===== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 6px 25px rgba(0,0,0,0.5);
+}
+
+th, td {
+    padding: 14px;
+    text-align: left;
+}
+
+th {
+    background: rgba(255,255,255,0.25);
+    font-family: 'Montserrat', sans-serif;
+}
+
+tr {
+    transition: background 0.3s;
+}
+
+tr:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* ===== Кнопки ===== */
+.action-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-right: 6px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.action-btn:hover {
+    transform: scale(1.15);
+}
+
+.edit-btn {
+    background: rgba(33,150,243,0.8);
+    color: white;
+}
+
+.delete-btn {
+    background: rgba(244,67,54,0.8);
+    color: white;
+}
+
+/* ===== Анимация ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+<div class="bg"></div>
+<div class="overlay"></div>
+
+<header>
+    <h1>CRM AR+ · Клиенты</h1>
+    <div class="nav-buttons">
+        <button onclick="alert('Главная')">Главная</button>
+        <button onclick="alert('Клиенты')">Клиенты</button>
+        <button onclick="alert('Отчёты')">Отчёты</button>
+        <button onclick="alert('Настройки')">Настройки</button>
+    </div>
+</header>
+
+<div class="container">
+    <div class="form-group">
+        <input id="name" placeholder="Имя клиента">
+        <input id="email" placeholder="Email">
+        <input id="phone" placeholder="Телефон">
+        <button class="add-btn" onclick="addClient()">Добавить</button>
+    </div>
+
+    <table id="clients">
+        <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Email</th>
+            <th>Телефон</th>
+            <th>Действия</th>
+        </tr>
+    </table>
+</div>
+
+<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+<script>
+let pywebchannel = null;
+
+const nameInput = document.getElementById("name");
+const emailInput = document.getElementById("email");
+const phoneInput = document.getElementById("phone");
+
+new QWebChannel(qt.webChannelTransport, function(channel) {
+    pywebchannel = channel.objects.pywebchannel;
+
+    if (pywebchannel && pywebchannel.load_clients) {
+        pywebchannel.load_clients();
+    }
+});
+
+function addClient() {
+    if (!pywebchannel) {
+        alert("Связь с Python не установлена");
+        return;
+    }
+
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const phone = phoneInput.value.trim();
+
+    if (name === "") {
+        alert("Введите имя");
+        return;
+    }
+
+    pywebchannel.add_client(name, email, phone);
+
+    nameInput.value = "";
+    emailInput.value = "";
+    phoneInput.value = "";
+}
+
+function editClient(id) {
+    if (!pywebchannel) return;
+
+    const name = prompt("Новое имя:");
+    if (!name) return;
+
+    const email = prompt("Email:");
+    const phone = prompt("Телефон:");
+
+    pywebchannel.edit_client(id, name, email, phone);
+}
+
+function deleteClient(id) {
+    if (!pywebchannel) return;
+
+    if (confirm("Удалить клиента?")) {
+        pywebchannel.delete_client(id);
+    }
+}
+
+function updateTable(clients) {
+    const table = document.getElementById("clients");
+    table.innerHTML = `
+        <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Email</th>
+            <th>Телефон</th>
+            <th>Действия</th>
+        </tr>
+    `;
+
+    clients.forEach(c => {
+        const row = table.insertRow();
+        row.innerHTML = `
+            <td>${c[0]}</td>
+            <td>${c[1]}</td>
+            <td>${c[2]}</td>
+            <td>${c[3]}</td>
+            <td>
+                <button class="action-btn edit-btn" onclick="editClient(${c[0]})">✎</button>
+                <button class="action-btn delete-btn" onclick="deleteClient(${c[0]})">🗑</button>
+            </td>
+        `;
+    });
+}
+</script>
+</body>
+</html>
